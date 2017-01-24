@@ -10,7 +10,7 @@
 neutron net-update --port_security_enabled=False private
 
 # Create network ports for all VMs
-for port in p1in p1out p2in p2out p3in p3out source_vm_port dest_vm_port
+for port in p1in p1out p2in p2out p3in p3out p4in p4out p5in p5out p6in p6out source_vm_port dest_vm_port
 do
     neutron port-create --name "${port}" private
 done
@@ -31,6 +31,21 @@ nova boot --image "${IMAGE}" --flavor "${FLAVOR}" \
     --nic port-id="$(neutron port-show -f value -c id p3in)" \
     --nic port-id="$(neutron port-show -f value -c id p3out)" \
     vm3
+nova boot --image "${IMAGE}" --flavor "${FLAVOR}" \
+    --key-name "${SSH_KEYNAME}" --security-groups "${SECGROUP}" \
+    --nic port-id="$(neutron port-show -f value -c id p4in)" \
+    --nic port-id="$(neutron port-show -f value -c id p4out)" \
+    vm4
+nova boot --image "${IMAGE}" --flavor "${FLAVOR}" \
+    --key-name "${SSH_KEYNAME}" --security-groups "${SECGROUP}" \
+    --nic port-id="$(neutron port-show -f value -c id p5in)" \
+    --nic port-id="$(neutron port-show -f value -c id p5out)" \
+    vm5
+nova boot --image "${IMAGE}" --flavor "${FLAVOR}" \
+    --key-name "${SSH_KEYNAME}" --security-groups "${SECGROUP}" \
+    --nic port-id="$(neutron port-show -f value -c id p6in)" \
+    --nic port-id="$(neutron port-show -f value -c id p6out)" \
+    vm6
 
 # Demo VMs
 nova boot --image "${IMAGE}" --flavor "${FLAVOR}" \
@@ -82,7 +97,7 @@ neutron port-chain-create --port-pair-group PG1 --port-pair-group PG2 --flow-cla
 ssh cirros@${DEST_IP} 'while true; do echo -e "HTTP/1.0 200 OK\r\n\r\nWelcome to $(hostname)" | sudo nc -l -p 80 ; done&'
 
 # On service VMs, enable eth1 interface and add static routing
-for sfc_port in p1in p2in p3in
+for sfc_port in p1in p2in p3in p4in p5in p6in
 do
     ssh -T cirros@$(openstack port show ${sfc_port} -f value -c fixed_ips|grep "ip_address='[0-9]*\."|cut -d"'" -f2) <<EOF
 sudo sh -c 'echo "auto eth1" >> /etc/network/interfaces'
